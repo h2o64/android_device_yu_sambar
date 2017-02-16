@@ -70,8 +70,8 @@ endif
 TARGET_KERNEL_CONFIG := lineageos_sambar_defconfig
 TARGET_KERNEL_SOURCE := kernel/cyanogen/msm8994
 
-# Enable DIAG on debug builds
-ifneq ($(TARGET_BUILD_VARIANT),user)
+# Enable DIAG on eng builds
+ifeq ($(TARGET_BUILD_VARIANT),eng)
 TARGET_KERNEL_ADDITIONAL_CONFIG ?= lineageos_debug_config
 endif
 
