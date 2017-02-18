@@ -96,9 +96,6 @@ echo 40000 > /sys/devices/system/cpu/cpu4/cpufreq/interactive/min_sample_time
 echo 80000 > /sys/devices/system/cpu/cpu4/cpufreq/interactive/max_freq_hysteresis
 echo 384000 > /sys/devices/system/cpu/cpu4/cpufreq/scaling_min_freq
 
-# insert core_ctl module and use conservative paremeters
-insmod /system/lib/modules/core_ctl.ko
-echo 1 > /sys/devices/system/cpu/cpu4/core_ctl/max_cpus
 # re-enable thermal and BCL hotplug
 echo 1 > /sys/module/msm_thermal/core_control/enabled
 for hotplug_mask in /sys/devices/soc.0/qcom,bcl.*/hotplug_mask
@@ -120,14 +117,20 @@ echo "4:4294967295 5:4294967295 6:4294967295 7:4294967295" > /sys/module/msm_per
 # input boost configuration
 echo 0:1344000 > /sys/module/cpu_boost/parameters/input_boost_freq
 echo 40 > /sys/module/cpu_boost/parameters/input_boost_ms
-# core_ctl module
-echo 4 > /sys/devices/system/cpu/cpu4/core_ctl/max_cpus
-echo 0 > /sys/devices/system/cpu/cpu4/core_ctl/min_cpus
+
+# Configure core_ctl
+echo 1 > /sys/devices/system/cpu/cpu4/core_ctl/min_cpus
+echo 2 > /sys/devices/system/cpu/cpu4/core_ctl/max_cpus
 echo 60 > /sys/devices/system/cpu/cpu4/core_ctl/busy_up_thres
 echo 30 > /sys/devices/system/cpu/cpu4/core_ctl/busy_down_thres
 echo 100 > /sys/devices/system/cpu/cpu4/core_ctl/offline_delay_ms
-echo 1 > /sys/devices/system/cpu/cpu4/core_ctl/is_big_cluster
 echo 4 > /sys/devices/system/cpu/cpu4/core_ctl/task_thres
+echo 1 > /sys/devices/system/cpu/cpu4/core_ctl/is_big_cluster
+echo 0 > /sys/devices/system/cpu/cpu0/core_ctl/busy_up_thres
+echo 0 > /sys/devices/system/cpu/cpu0/core_ctl/busy_down_thres
+echo 100 > /sys/devices/system/cpu/cpu0/core_ctl/offline_delay_ms
+echo 1 > /sys/devices/system/cpu/cpu0/core_ctl/not_preferred
+
 # Setting b.L scheduler parameters
 echo 1 > /proc/sys/kernel/power_aware_timer_migration
 echo 1 > /proc/sys/kernel/sched_migration_fixup
