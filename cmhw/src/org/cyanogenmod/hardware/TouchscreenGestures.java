@@ -37,20 +37,23 @@ import cyanogenmod.hardware.TouchscreenGesture;
  */
 public class TouchscreenGestures {
 
-    private static final String GESTURE_PATH =
-            "/sys/devices/virtual/touchscreen/touchscreen_dev/gesture_ctrl";
+    private String sysfsKey;
+
+    private static final String[] GESTURE_SYSFS = {
+        "DOWN",
+        "LEFT",
+        "RIGHT",
+        "o",
+        "v",
+    };
 
     // Id, name, keycode
     private static final TouchscreenGesture[] TOUCHSCREEN_GESTURES = {
-        new TouchscreenGesture(0, "One finger up swipe", 254),
-        new TouchscreenGesture(1, "One finger down swipe", 249),
-        new TouchscreenGesture(2, "One finger left swipe", 250),
-        new TouchscreenGesture(3, "One finger right swipe", 251),
-        new TouchscreenGesture(4, "Letter C", 252),
-        new TouchscreenGesture(5, "Letter E", 255),
-        new TouchscreenGesture(6, "Letter M", 256),
-        new TouchscreenGesture(7, "Letter O", 253),
-        new TouchscreenGesture(8, "Letter W", 257),
+        new TouchscreenGesture(1, "Down arrow", 199),
+        new TouchscreenGesture(2, "Left arrow", 253),
+        new TouchscreenGesture(3, "Right arrow", 254),
+        new TouchscreenGesture(7, "Letter O", 250),
+        new TouchscreenGesture(7, "Letter V", 252),
     };
 
     /**
@@ -59,8 +62,14 @@ public class TouchscreenGestures {
      * @return boolean Supported devices must return always true
      */
     public static boolean isSupported() {
-        return FileUtils.isFileWritable(GESTURE_PATH) &&
-                FileUtils.isFileReadable(GESTURE_PATH);
+        for (String path : GESTURE_PATHS) {
+				String actual_path = "/sys/devices/soc.0/f9924000.i2c/i2c-2/2-004a/" + path;
+            if (!FileUtils.isFileWritable(actual_path) ||
+                    !FileUtils.isFileReadable(actual_path)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /*
@@ -74,6 +83,11 @@ public class TouchscreenGestures {
         return TOUCHSCREEN_GESTURES;
     }
 
+
+    private String getEnableString(boolean enable) {
+        return sysfsKey + " " + (enable ? 0x01 : 0x02) + ";";
+    }
+
     /**
      * This method allows to set the activation status of a gesture
      *
@@ -84,50 +98,8 @@ public class TouchscreenGestures {
      */
     public static boolean setGestureEnabled(
             final TouchscreenGesture gesture, final boolean state) {
-        String[] cmd = null;
-
-        switch (gesture.id) {
-            case 0:
-                cmd = new String[] { "up=" };
-                break;
-            case 1:
-                cmd = new String[] { "down=" };
-                break;
-            case 2:
-                cmd = new String[] { "left=" };
-                break;
-            case 3:
-                cmd = new String[] { "right=" };
-                break;
-            case 4:
-                cmd = new String[] { "c=" };
-                break;
-            case 5:
-                cmd = new String[] { "e=" };
-                break;
-            case 6:
-                cmd = new String[] { "m=" };
-                break;
-            case 7:
-                cmd = new String[] { "o=" };
-                break;
-            case 8:
-                cmd = new String[] { "w=" };
-                break;
-            default:
-                return false;
-        }
-
-        String enabled = state ? "true" : "false";
-        StringBuilder builder = new StringBuilder();
-        for (String i : cmd) {
-            if (builder.length() > 0) {
-                builder.append(',');
-            }
-            builder.append(i);
-            builder.append(enabled);
-        }
-
-        return FileUtils.writeLine(GESTURE_PATH, builder.toString());
+        FileUtils.writeLine("en_gesture", "1");
+		  final String actual_path = "/sys/devices/soc.0/f9924000.i2c/i2c-2/2-004a/" + GESTURE_PATHS[gesture.id];
+        return FileUtils.writeLine(actual_path, getEnableString(enable));
     }
 }
