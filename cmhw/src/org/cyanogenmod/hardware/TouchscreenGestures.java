@@ -37,8 +37,6 @@ import cyanogenmod.hardware.TouchscreenGesture;
  */
 public class TouchscreenGestures {
 
-    private String sysfsKey;
-
     private static final String[] GESTURE_SYSFS = {
         "DOWN",
         "LEFT",
@@ -83,11 +81,6 @@ public class TouchscreenGestures {
         return TOUCHSCREEN_GESTURES;
     }
 
-
-    private String getEnableString(boolean enable) {
-        return sysfsKey + " " + (enable ? 0x01 : 0x02) + ";";
-    }
-
     /**
      * This method allows to set the activation status of a gesture
      *
@@ -98,8 +91,9 @@ public class TouchscreenGestures {
      */
     public static boolean setGestureEnabled(
             final TouchscreenGesture gesture, final boolean state) {
-        FileUtils.writeLine("en_gesture", "1");
+        final String stateStr = state ? "0x01" : "0x02";
 		  final String actual_path = "/sys/devices/soc.0/f9924000.i2c/i2c-2/2-004a/" + GESTURE_PATHS[gesture.id];
+        FileUtils.writeLine("/sys/devices/soc.0/f9924000.i2c/i2c-2/2-004a/en_gesture", "1");
         return FileUtils.writeLine(actual_path, getEnableString(enable));
     }
 }
