@@ -40,6 +40,7 @@
 #include <gralloc_priv.h>
 #include <gui/Surface.h>
 #include <dlfcn.h>
+#include <unistd.h>
 
 #include "QCamera2HWI.h"
 #include "QCameraMem.h"
@@ -1136,10 +1137,11 @@ QCamera2HardwareInterface::QCamera2HardwareInterface(uint32_t cameraId)
       mOutputCount(0),
       mInputCount(0),
       mAdvancedCaptureConfigured(false),
-      mHDRBracketingEnabled(false)
+      mHDRBracketingEnabled(false),
 #ifdef USE_MEDIA_EXTENSIONS
-      , mVideoMem(NULL)
+      mVideoMem(NULL),
 #endif
+      mbOISValue(false)
 {
     getLogLevel();
     ATRACE_CALL();
@@ -2321,15 +2323,27 @@ int QCamera2HardwareInterface::startPreview()
         if (focusMode == CAM_FOCUS_MODE_CONTINOUS_PICTURE)
             mCameraHandle->ops->cancel_auto_focus(mCameraHandle->camera_handle);
     }
-    updatePostPreviewParameters();
+    if (mParameters.getRecordingHintValue() == true)
+        updatePostPreviewParameters(true);
+    else if (mParameters.getPDAFValue() == true)
+        updatePostPreviewParameters(false);
+    else
+        updatePostPreviewParameters(true);
     CDBG_HIGH("%s: X", __func__);
     return rc;
 }
 
-int32_t QCamera2HardwareInterface::updatePostPreviewParameters() {
+int32_t QCamera2HardwareInterface::updatePostPreviewParameters(bool oisValue) {
     // Enable OIS only in Camera mode and 4k2k camcoder mode
     int32_t rc = NO_ERROR;
-    rc = mParameters.updateOisValue(1);
+    if (mCameraId != 0)
+        return NO_ERROR;
+    ALOGE("%s: OisValue: %d", __func__, (int)oisValue);
+    if (oisValue != mbOISValue)
+    {
+        mbOISValue = oisValue;
+        rc = mParameters.updateOisValue(oisValue);
+    }
     return NO_ERROR;
 }
 
@@ -2402,6 +2416,7 @@ int QCamera2HardwareInterface::startRecording()
 
         // Set recording hint to TRUE
         mParameters.updateRecordingHintValue(TRUE);
+        updatePostPreviewParameters(true);
         rc = preparePreview();
         if (rc == NO_ERROR) {
             rc = startChannel(QCAMERA_CH_TYPE_PREVIEW);
@@ -3052,6 +3067,12 @@ int QCamera2HardwareInterface::takePicture()
     // Get number of retro-active snapshots
     uint8_t numRetroSnapshots = mParameters.getNumOfRetroSnapshots();
     CDBG_HIGH("%s: E", __func__);
+
+    if (!mParameters.isZSLMode())
+    {
+        updatePostPreviewParameters(true);
+        usleep(70*1000);	//70us*1000=70ms
+    }
 
     //Set rotation value from user settings as Jpeg rotation
     //to configure back-end modules.
