@@ -147,6 +147,10 @@ PRODUCT_PACKAGES += \
     fingerprint.msm8994 \
     fingerprintd
 
+# Doze
+PRODUCT_PACKAGES += \
+	YUDoze
+
 # DPM
 PRODUCT_PACKAGES += \
     com.qti.dpmframework \
