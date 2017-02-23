@@ -97,6 +97,7 @@ persist.radio.multisim.config=dsds
 ro.telephony.call_ring.multiple=false
 rild.libargs=-d /dev/smd0
 ril.ecclist=000,08,100,101,102,110,112,118,119,120,122,911,999
+ril.ecclist1=000,08,100,101,102,110,112,118,119,120,122,911,999
 
 ro.com.android.mobiledata=false
 ro.telephony.default_network=9,9
